@@ -949,9 +949,9 @@ class ChartingState extends MusicBeatState
 			// vocals.stop();
 		}
 
-		var file:Dynamic = Paths.voices(currentSongName);
+		var file:String = Paths.voices(currentSongName);
 		vocals = new FlxSound();
-		if (Std.isOfType(file, Sound) || OpenFlAssets.exists(file))
+		if (OpenFlAssets.exists(file))
 		{
 			vocals.loadEmbedded(file);
 			FlxG.sound.list.add(vocals);
@@ -1501,8 +1501,8 @@ class ChartingState extends MusicBeatState
 		else
 		{
 		#end
-			var leVocals:Dynamic = Paths.inst(currentSongName);
-			if (!Std.isOfType(leVocals, Sound) && OpenFlAssets.exists(leVocals))
+			var leVocals:String = Paths.inst(currentSongName);
+			if (OpenFlAssets.exists(leVocals))
 			{ // Vanilla inst
 				audioBuffers[0] = AudioBuffer.fromFile('./' + leVocals.substr(6));
 				// trace('Inst found');
@@ -1521,8 +1521,8 @@ class ChartingState extends MusicBeatState
 		else
 		{
 		#end
-			var leVocals:Dynamic = Paths.voices(currentSongName);
-			if (!Std.isOfType(leVocals, Sound) && OpenFlAssets.exists(leVocals))
+			var leVocals:String = Paths.voices(currentSongName);
+			if (OpenFlAssets.exists(leVocals))
 			{ // Vanilla voices
 				audioBuffers[1] = AudioBuffer.fromFile('./' + leVocals.substr(6));
 				// trace('Voices found, LETS FUCKING GOOOO');

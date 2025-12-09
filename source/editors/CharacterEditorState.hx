@@ -26,7 +26,6 @@ import openfl.events.Event;
 import openfl.events.IOErrorEvent;
 import haxe.Json;
 import Character;
-import flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross;
 import lime.system.Clipboard;
 import flixel.animation.FlxAnimation;
 #if MODS_ALLOWED
@@ -70,7 +69,6 @@ class CharacterEditorState extends MusicBeatState
 	var leHealthIcon:HealthIcon;
 	var characterList:Array<String> = [];
 
-	var cameraFollowPointer:FlxSprite;
 	var healthBarBG:FlxSprite;
 
 	override function create()
@@ -86,19 +84,13 @@ class CharacterEditorState extends MusicBeatState
 		FlxG.cameras.reset(camEditor);
 		FlxG.cameras.add(camHUD);
 		FlxG.cameras.add(camMenu);
-		FlxCamera.defaultCameras = [camEditor];
+		@:privateAccess
+		FlxCamera._defaultCameras = [camEditor];
 
 		bgLayer = new FlxTypedGroup<FlxSprite>();
 		add(bgLayer);
 		charLayer = new FlxTypedGroup<Character>();
 		add(charLayer);
-
-		var pointer:FlxGraphic = FlxGraphic.fromClass(GraphicCursorCross);
-		cameraFollowPointer = new FlxSprite().loadGraphic(pointer);
-		cameraFollowPointer.setGraphicSize(40, 40);
-		cameraFollowPointer.updateHitbox();
-		cameraFollowPointer.color = FlxColor.WHITE;
-		add(cameraFollowPointer);
 
 		changeBGbutton = new FlxButton(FlxG.width - 360, 25, "", function()
 		{
@@ -849,10 +841,6 @@ class CharacterEditorState extends MusicBeatState
 			x -= 100 + char.cameraPosition[0];
 		}
 		y -= 100 - char.cameraPosition[1];
-
-		x -= cameraFollowPointer.width / 2;
-		y -= cameraFollowPointer.height / 2;
-		cameraFollowPointer.setPosition(x, y);
 	}
 
 	function findAnimationByName(name:String):AnimArray
