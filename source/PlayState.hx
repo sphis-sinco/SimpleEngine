@@ -1,11 +1,7 @@
 package;
 
-#if desktop
-import Discord.DiscordClient;
-#end
 import Section.SwagSection;
 import Song.SwagSong;
-import WiggleEffect.WiggleEffectType;
 import flixel.FlxBasic;
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -26,7 +22,7 @@ import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
-import flixel.system.FlxSound;
+import flixel.sound.FlxSound;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
@@ -46,7 +42,6 @@ import editors.ChartingState;
 import editors.CharacterEditorState;
 import Achievements;
 import StageData;
-import FunkinLua;
 import DialogueBoxPsych;
 #if sys
 import sys.FileSystem;
@@ -72,28 +67,12 @@ class PlayState extends MusicBeatState
 		['Perfect!!', 1] // The value on this one isn't used actually, since Perfect is always "1"
 	];
 
-	#if (haxe >= "4.0.0")
-	public var modchartTweens:Map<String, FlxTween> = new Map();
-	public var modchartSprites:Map<String, ModchartSprite> = new Map();
-	public var modchartTimers:Map<String, FlxTimer> = new Map();
-	#else
-	public var modchartTweens:Map<String, FlxTween> = new Map<String, FlxTween>();
-	public var modchartSprites:Map<String, ModchartSprite> = new Map<String, Dynamic>();
-	public var modchartTimers:Map<String, FlxTimer> = new Map<String, FlxTimer>();
-	#end
-
 	// event variables
 	private var isCameraOnForcedPos:Bool = false;
 
-	#if (haxe >= "4.0.0")
-	public var boyfriendMap:Map<String, Boyfriend> = new Map();
-	public var dadMap:Map<String, Character> = new Map();
-	public var gfMap:Map<String, Character> = new Map();
-	#else
-	public var boyfriendMap:Map<String, Boyfriend> = new Map<String, Boyfriend>();
-	public var dadMap:Map<String, Character> = new Map<String, Character>();
-	public var gfMap:Map<String, Character> = new Map<String, Character>();
-	#end
+	public var boyfriendMap:Map<String, Boyfriend> = [];
+	public var dadMap:Map<String, Character> = [];
+	public var gfMap:Map<String, Character> = [];
 
 	public var BF_X:Float = 770;
 	public var BF_Y:Float = 100;
@@ -181,12 +160,7 @@ class PlayState extends MusicBeatState
 	var halloweenBG:BGSprite;
 	var halloweenWhite:BGSprite;
 
-	var phillyCityLights:FlxTypedGroup<BGSprite>;
 	var phillyTrain:BGSprite;
-	var blammedLightsBlack:ModchartSprite;
-	var blammedLightsBlackTween:FlxTween;
-	var phillyCityLightsEvent:FlxTypedGroup<BGSprite>;
-	var phillyCityLightsEventTween:FlxTween;
 	var trainSound:FlxSound;
 
 	var limoKillingState:Int = 0;
@@ -231,15 +205,6 @@ class PlayState extends MusicBeatState
 	public var inCutscene:Bool = false;
 
 	var songLength:Float = 0;
-
-	#if desktop
-	// Discord RPC variables
-	var storyDifficultyText:String = "";
-	var detailsText:String = "";
-	var detailsPausedText:String = "";
-	#end
-
-	private var luaArray:Array<FunkinLua> = [];
 
 	// Achievement shit
 	var keysPressed:Array<Bool> = [false, false, false, false];
@@ -397,18 +362,6 @@ class PlayState extends MusicBeatState
 				city.setGraphicSize(Std.int(city.width * 0.85));
 				city.updateHitbox();
 				add(city);
-
-				phillyCityLights = new FlxTypedGroup<BGSprite>();
-				add(phillyCityLights);
-
-				for (i in 0...5)
-				{
-					var light:BGSprite = new BGSprite('philly/win' + i, city.x, city.y, 0.3, 0.3);
-					light.visible = false;
-					light.setGraphicSize(Std.int(light.width * 0.85));
-					light.updateHitbox();
-					phillyCityLights.add(light);
-				}
 
 				if (!ClientPrefs.lowQuality)
 				{
@@ -644,9 +597,6 @@ class PlayState extends MusicBeatState
 		}
 
 		add(backgroundGroup);
-
-		if (curStage == 'philly')
-			add(phillyCityLightsEvent);
 
 		boyfriendGroup = new FlxTypedGroup<Boyfriend>();
 		dadGroup = new FlxTypedGroup<Character>();
@@ -958,10 +908,6 @@ class PlayState extends MusicBeatState
 		CoolUtil.precacheSound('missnote2');
 		CoolUtil.precacheSound('missnote3');
 
-		#if desktop
-		// Updating Discord Rich Presence.
-		DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
-		#end
 		super.create();
 	}
 
@@ -1360,11 +1306,6 @@ class PlayState extends MusicBeatState
 		FlxTween.tween(timeBarBG, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 		FlxTween.tween(timeBar, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 		FlxTween.tween(timeTxt, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
-
-		#if desktop
-		// Updating Discord Rich Presence (with Time Left)
-		DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter(), true, songLength);
-		#end
 	}
 
 	var debugNum:Int = 0;
@@ -1683,11 +1624,6 @@ class PlayState extends MusicBeatState
 			if (finishTimer != null && !finishTimer.finished)
 				finishTimer.active = false;
 
-			if (blammedLightsBlackTween != null)
-				blammedLightsBlackTween.active = false;
-			if (phillyCityLightsEventTween != null)
-				phillyCityLightsEventTween.active = false;
-
 			var chars:Array<Character> = [boyfriend, gf, dad];
 			for (i in 0...chars.length)
 			{
@@ -1695,15 +1631,6 @@ class PlayState extends MusicBeatState
 				{
 					chars[i].colorTween.active = false;
 				}
-			}
-
-			for (tween in modchartTweens)
-			{
-				tween.active = false;
-			}
-			for (timer in modchartTimers)
-			{
-				timer.active = false;
 			}
 		}
 
@@ -1724,11 +1651,6 @@ class PlayState extends MusicBeatState
 			if (finishTimer != null && !finishTimer.finished)
 				finishTimer.active = true;
 
-			if (blammedLightsBlackTween != null)
-				blammedLightsBlackTween.active = true;
-			if (phillyCityLightsEventTween != null)
-				phillyCityLightsEventTween.active = true;
-
 			var chars:Array<Character> = [boyfriend, gf, dad];
 			for (i in 0...chars.length)
 			{
@@ -1737,73 +1659,10 @@ class PlayState extends MusicBeatState
 					chars[i].colorTween.active = true;
 				}
 			}
-
-			for (tween in modchartTweens)
-			{
-				tween.active = true;
-			}
-			for (timer in modchartTimers)
-			{
-				timer.active = true;
-			}
 			paused = false;
-
-			#if desktop
-			if (startTimer.finished)
-			{
-				DiscordClient.changePresence(detailsText, SONG.song
-					+ " ("
-					+ storyDifficultyText
-					+ ")", iconP2.getCharacter(), true,
-					songLength
-					- Conductor.songPosition
-					- ClientPrefs.noteOffset);
-			}
-			else
-			{
-				DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
-			}
-			#end
 		}
 
 		super.closeSubState();
-	}
-
-	override public function onFocus():Void
-	{
-		#if desktop
-		if (health > 0 && !paused)
-		{
-			if (Conductor.songPosition > 0.0)
-			{
-				DiscordClient.changePresence(detailsText, SONG.song
-					+ " ("
-					+ storyDifficultyText
-					+ ")", iconP2.getCharacter(), true,
-					songLength
-					- Conductor.songPosition
-					- ClientPrefs.noteOffset);
-			}
-			else
-			{
-				DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
-			}
-		}
-		#end
-
-		super.onFocus();
-	}
-
-	override public function onFocusLost():Void
-	{
-		#if desktop
-		if (health > 0 && !paused)
-		{
-			DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
-		}
-		#end
-
-		super.onFocusLost();
 	}
 
 	function resyncVocals():Void
@@ -1848,7 +1707,6 @@ class PlayState extends MusicBeatState
 						trainFrameTiming = 0;
 					}
 				}
-				phillyCityLights.members[curLight].alpha -= (Conductor.crochet / 1000) * FlxG.elapsed * 1.5;
 			case 'limo':
 				if (!ClientPrefs.lowQuality)
 				{
@@ -2030,10 +1888,6 @@ class PlayState extends MusicBeatState
 				}
 				openSubState(new PauseSubState(boyfriend.getScreenPosition().x, boyfriend.getScreenPosition().y));
 			}
-
-			#if desktop
-			DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
-			#end
 		}
 
 		if (FlxG.keys.justPressed.SEVEN && !endingSong && !inCutscene)
@@ -2042,10 +1896,6 @@ class PlayState extends MusicBeatState
 			paused = true;
 			cancelFadeTween();
 			MusicBeatState.switchState(new ChartingState());
-
-			#if desktop
-			DiscordClient.changePresence("Chart Editor", null, null, true);
-			#end
 		}
 
 		// FlxG.watch.addQuick('VOL', vocals.amplitudeLeft);
@@ -2480,12 +2330,6 @@ class PlayState extends MusicBeatState
 
 			openSubState(new GameOverSubstate(boyfriend.getScreenPosition().x, boyfriend.getScreenPosition().y, camFollowPos.x, camFollowPos.y, this));
 
-			// MusicBeatState.switchState(new GameOverState(boyfriend.getScreenPosition().x, boyfriend.getScreenPosition().y));
-
-			#if desktop
-			// Game Over doesn't get his own variable because it's only used here
-			DiscordClient.changePresence("Game Over - " + detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
-			#end
 			isDead = true;
 			return true;
 		}
@@ -2566,164 +2410,6 @@ class PlayState extends MusicBeatState
 				if (Math.isNaN(value))
 					value = 1;
 				gfSpeed = value;
-
-			case 'Blammed Lights':
-				var lightId:Int = Std.parseInt(value1);
-				if (Math.isNaN(lightId))
-					lightId = 0;
-
-				if (lightId > 0 && curLightEvent != lightId)
-				{
-					if (lightId > 5)
-						lightId = FlxG.random.int(1, 5, [curLightEvent]);
-
-					var color:Int = 0xffffffff;
-					switch (lightId)
-					{
-						case 1: // Blue
-							color = 0xff31a2fd;
-						case 2: // Green
-							color = 0xff31fd8c;
-						case 3: // Pink
-							color = 0xfff794f7;
-						case 4: // Red
-							color = 0xfff96d63;
-						case 5: // Orange
-							color = 0xfffba633;
-					}
-					curLightEvent = lightId;
-
-					if (blammedLightsBlack.alpha == 0)
-					{
-						if (blammedLightsBlackTween != null)
-						{
-							blammedLightsBlackTween.cancel();
-						}
-						blammedLightsBlackTween = FlxTween.tween(blammedLightsBlack, {alpha: 1}, 1, {
-							ease: FlxEase.quadInOut,
-							onComplete: function(twn:FlxTween)
-							{
-								blammedLightsBlackTween = null;
-							}
-						});
-
-						var chars:Array<Character> = [boyfriend, gf, dad];
-						for (i in 0...chars.length)
-						{
-							if (chars[i].colorTween != null)
-							{
-								chars[i].colorTween.cancel();
-							}
-							chars[i].colorTween = FlxTween.color(chars[i], 1, FlxColor.WHITE, color, {
-								onComplete: function(twn:FlxTween)
-								{
-									chars[i].colorTween = null;
-								},
-								ease: FlxEase.quadInOut
-							});
-						}
-					}
-					else
-					{
-						if (blammedLightsBlackTween != null)
-						{
-							blammedLightsBlackTween.cancel();
-						}
-						blammedLightsBlackTween = null;
-						blammedLightsBlack.alpha = 1;
-
-						var chars:Array<Character> = [boyfriend, gf, dad];
-						for (i in 0...chars.length)
-						{
-							if (chars[i].colorTween != null)
-							{
-								chars[i].colorTween.cancel();
-							}
-							chars[i].colorTween = null;
-						}
-						dad.color = color;
-						boyfriend.color = color;
-						gf.color = color;
-					}
-
-					if (curStage == 'philly')
-					{
-						if (phillyCityLightsEvent != null)
-						{
-							phillyCityLightsEvent.forEach(function(spr:BGSprite)
-							{
-								spr.visible = false;
-							});
-							phillyCityLightsEvent.members[lightId - 1].visible = true;
-							phillyCityLightsEvent.members[lightId - 1].alpha = 1;
-						}
-					}
-				}
-				else
-				{
-					if (blammedLightsBlack.alpha != 0)
-					{
-						if (blammedLightsBlackTween != null)
-						{
-							blammedLightsBlackTween.cancel();
-						}
-						blammedLightsBlackTween = FlxTween.tween(blammedLightsBlack, {alpha: 0}, 1, {
-							ease: FlxEase.quadInOut,
-							onComplete: function(twn:FlxTween)
-							{
-								blammedLightsBlackTween = null;
-							}
-						});
-					}
-
-					if (curStage == 'philly')
-					{
-						phillyCityLights.forEach(function(spr:BGSprite)
-						{
-							spr.visible = false;
-						});
-						phillyCityLightsEvent.forEach(function(spr:BGSprite)
-						{
-							spr.visible = false;
-						});
-
-						var memb:FlxSprite = phillyCityLightsEvent.members[curLightEvent - 1];
-						if (memb != null)
-						{
-							memb.visible = true;
-							memb.alpha = 1;
-							if (phillyCityLightsEventTween != null)
-								phillyCityLightsEventTween.cancel();
-
-							phillyCityLightsEventTween = FlxTween.tween(memb, {alpha: 0}, 1, {
-								onComplete: function(twn:FlxTween)
-								{
-									phillyCityLightsEventTween = null;
-								},
-								ease: FlxEase.quadInOut
-							});
-						}
-					}
-
-					var chars:Array<Character> = [boyfriend, gf, dad];
-					for (i in 0...chars.length)
-					{
-						if (chars[i].colorTween != null)
-						{
-							chars[i].colorTween.cancel();
-						}
-						chars[i].colorTween = FlxTween.color(chars[i], 1, chars[i].color, FlxColor.WHITE, {
-							onComplete: function(twn:FlxTween)
-							{
-								chars[i].colorTween = null;
-							},
-							ease: FlxEase.quadInOut
-						});
-					}
-
-					curLight = 0;
-					curLightEvent = 0;
-				}
 
 			case 'Kill Henchmen':
 				killHenchmen();
@@ -3516,10 +3202,10 @@ class PlayState extends MusicBeatState
 
 			/*boyfriend.stunned = true;
 		
-														// get stunned for 1/60 of a second, makes you able to
-														new FlxTimer().start(1 / 60, function(tmr:FlxTimer)
-														{
-															boyfriend.stunned = false;
+																				// get stunned for 1/60 of a second, makes you able to
+																				new FlxTimer().start(1 / 60, function(tmr:FlxTimer)
+																				{
+																					boyfriend.stunned = false;
 				});*/
 
 			switch (direction)
@@ -3900,23 +3586,13 @@ class PlayState extends MusicBeatState
 		FlxG.sound.music.fadeTween = null;
 	}
 
-	public function removeLua(lua:FunkinLua)
-	{
-		if (luaArray != null && !preventLuaRemove)
-		{
-			luaArray.remove(lua);
-		}
-	}
-
 	var lastStepHit:Int = -1;
 
 	override function stepHit()
 	{
 		super.stepHit();
 		if (FlxG.sound.music.time > Conductor.songPosition + 20 || FlxG.sound.music.time < Conductor.songPosition - 20)
-		{
 			resyncVocals();
-		}
 
 		if (curStep == lastStepHit)
 			return;
@@ -3952,20 +3628,14 @@ class PlayState extends MusicBeatState
 		iconP2.updateHitbox();
 
 		if (curBeat % gfSpeed == 0 && !gf.stunned)
-		{
 			gf.dance();
-		}
 
 		if (curBeat % 2 == 0)
 		{
 			if (boyfriend.animation.curAnim.name != null && !boyfriend.animation.curAnim.name.startsWith("sing") && !boyfriend.specialAnim)
-			{
 				boyfriend.dance();
-			}
 			if (dad.animation.curAnim.name != null && !dad.animation.curAnim.name.startsWith("sing") && !dad.stunned)
-			{
 				dad.dance();
-			}
 		}
 		else if (dad.danceIdle
 			&& dad.animation.curAnim.name != null
@@ -4008,19 +3678,6 @@ class PlayState extends MusicBeatState
 			case "philly":
 				if (!trainMoving)
 					trainCooldown += 1;
-
-				if (curBeat % 4 == 0)
-				{
-					phillyCityLights.forEach(function(light:BGSprite)
-					{
-						light.visible = false;
-					});
-
-					curLight = FlxG.random.int(0, phillyCityLights.length - 1, [curLight]);
-
-					phillyCityLights.members[curLight].visible = true;
-					phillyCityLights.members[curLight].alpha = 1;
-				}
 
 				if (curBeat % 8 == 4 && FlxG.random.bool(30) && !trainMoving && trainCooldown > 8)
 				{
@@ -4165,7 +3822,4 @@ class PlayState extends MusicBeatState
 		return -1;
 	}
 	#end
-
-	var curLight:Int = 0;
-	var curLightEvent:Int = 0;
 }

@@ -1,8 +1,5 @@
 package editors;
 
-#if desktop
-import Discord.DiscordClient;
-#end
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.addons.display.FlxGridOverlay;
@@ -11,7 +8,7 @@ import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxMath;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
-import flixel.system.FlxSound;
+import flixel.sound.FlxSound;
 
 using StringTools;
 
@@ -31,10 +28,6 @@ class MasterEditorMenu extends MusicBeatState
 	override function create()
 	{
 		FlxG.camera.bgColor = FlxColor.BLACK;
-		#if desktop
-		// Updating Discord Rich Presence
-		DiscordClient.changePresence("Editors Main Menu", null);
-		#end
 
 		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.scrollFactor.set();
@@ -74,7 +67,8 @@ class MasterEditorMenu extends MusicBeatState
 
 		if (controls.ACCEPT)
 		{
-			switch(options[curSelected]) {
+			switch (options[curSelected])
+			{
 				case 'Character Editor':
 					LoadingState.loadAndSwitchState(new CharacterEditorState(Character.DEFAULT_CHARACTER, false));
 				case 'Week Editor':
@@ -88,7 +82,7 @@ class MasterEditorMenu extends MusicBeatState
 			}
 			FlxG.sound.music.volume = 0;
 		}
-		
+
 		var bullShit:Int = 0;
 		for (item in grpTexts.members)
 		{
