@@ -214,8 +214,6 @@ class PlayState extends MusicBeatState
 	public var backgroundGroup:FlxTypedGroup<FlxSprite>;
 	public var foregroundGroup:FlxTypedGroup<FlxSprite>;
 
-	private var luaDebugGroup:FlxTypedGroup<DebugLuaText>;
-
 	override public function create()
 	{
 		if (FlxG.sound.music != null)
